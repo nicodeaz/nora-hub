@@ -25,7 +25,7 @@ No backend. Everything (PIN, cards, notes, testimonials) lives in `localStorage`
 - A shareable link (any URL containing `testimonio`, e.g. `#dejar-testimonio`) bypasses the PIN entirely and opens a public testimonial submission form instead — for students/colleagues to leave a review without seeing the private dashboard.
 
 **Dashboard**
-- Cards are searchable and filterable by category (Principal, Gestión, Prensa, Comunidad, Recursos).
+- Cards are filterable by category (Principal, Gestión, Prensa, Comunidad, Recursos).
 - Cards can be pinned (surfaced in a "Destacados" section), edited, deleted, or added from scratch via a form modal — no JSON editing required.
 - A card's `actionType` decides what a tap does: open a URL in a new tab, or open one of the in-app modals (press kit, testimonials, notebook).
 
@@ -36,7 +36,7 @@ No backend. Everything (PIN, cards, notes, testimonials) lives in `localStorage`
 
 **Installable**
 - Full PWA: web manifest with maskable icons, offline-capable service worker, install prompts on both Android/desktop (native `beforeinstallprompt`) and iOS (manual "Add to Home Screen" walkthrough, since Safari has no native prompt).
-- A short branded loading screen (black background, the NF mark, a sweeping progress bar) covers the first paint while fonts settle in, so nothing flashes unstyled.
+- A short branded loading screen (black background, the "Nora Hub" wordmark, a sweeping progress bar) covers the first paint while fonts settle in, so nothing flashes unstyled.
 
 ## Styles
 
@@ -62,9 +62,9 @@ Cards and chrome (header, bottom nav) sit on plain white surfaces so they read c
 **Motion** — soft, never sharp: drifting watercolor blur spots, twinkling sparkle accents, a gentle pulse, and a fade-in used across every modal. All defined as custom keyframes in `src/index.css` rather than a JS animation library.
 
 **Brand marks**
-- The only logo used in the running app is Nora's actual signature (`public/logo-nora-black.png` / `logo-nora-white.png`), rendered via the `SignatureLogo` component — no generated/vector approximation.
-- The app icon is a separate mark: an "NF" monogram over "HUB" in white on black (`public/nf-mark.png`), used for the PWA icon, favicon, and the loading screen.
-- The footer credits the studio with a plain, transparent Okto wordmark — nothing else in the footer.
+- There is no logo image in the running app — the "Nora Hub" identity is pure typography, everywhere: header, lock screen, loading screen, and the public testimonial view all render the `NoraHubWordmark` component (`"Nora"` in ink/white + `"Hub"` in the red/pink accent, `font-label`). This deliberately separates the app's own identity from Nora Filmus's personal signature/monogram, which the app no longer uses at all.
+- The favicon, PWA icon, and social-share image are generated from that same wordmark — "NORA" / "HUB" stacked as text on black — via `scripts/gen-icons.mjs` (no external logo file; re-run it after changing `NoraHubWordmark`'s colors).
+- The footer credits the studio with a plain, transparent Okto wordmark — the only image-based logo left in the project, and unrelated to the Nora Hub identity above.
 
 ## Tech stack
 

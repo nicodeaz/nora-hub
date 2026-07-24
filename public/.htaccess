@@ -1,0 +1,50 @@
+# Nora Hub — production Apache config (copied into dist/ by Vite's public/ dir).
+
+# Force HTTPS
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # SPA fallback: serve index.html for any /hub/* path that isn't a real
+  # file, so a direct/deep link never 404s.
+  RewriteBase /hub/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . index.html [L]
+</IfModule>
+
+# Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+
+# Caching
+<IfModule mod_headers.c>
+  # App shell + manifest: never cache, so a new deploy is visible immediately
+  # (the service worker itself now fetches these network-first, but this is
+  # the backstop for browsers/proxies that ignore that).
+  <FilesMatch "^(index\.html|manifest\.json|sw\.js)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+
+  # Content-hashed build assets (Vite fingerprints the filename on every
+  # change): safe to cache forever.
+  <FilesMatch "\.(js|css)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Basic hardening
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+# The hashed JS/CSS rule above only applies to the top-level dist/ output;
+# Vite's actual hashed bundles live under assets/ - this restates the same
+# immutable policy scoped there so it isn't shadowed by the no-cache rule.
+<IfModule mod_headers.c>
+  <LocationMatch "^/hub/assets/">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </LocationMatch>
+</IfModule>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { HubCardItem } from '../types';
-import * as LucideIcons from 'lucide-react';
+import { DynamicHubIcon } from './DynamicHubIcon';
 import { Sparkle } from './Sparkle';
 import { ExternalLink, Pin, MoreVertical, Edit2, Trash2, Copy, Check } from 'lucide-react';
 
@@ -21,9 +21,6 @@ export const HubCard: React.FC<HubCardProps> = ({
 }) => {
   const [showMenu, setShowMenu] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
-
-  // Dynamically resolve Lucide Icon component
-  const IconComponent = (LucideIcons as Record<string, React.ElementType>)[card.icon] || LucideIcons.Compass;
 
   // Accent Styles Map
   const accentStyles = {
@@ -81,7 +78,7 @@ export const HubCard: React.FC<HubCardProps> = ({
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <div className={`p-3 rounded-2xl ${currentAccent.bgIcon} transition-transform duration-300 group-hover:scale-105 shadow-xs`}>
-            <IconComponent className="w-6 h-6 sm:w-7 sm:h-7" />
+            <DynamicHubIcon name={card.icon} className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
 
           <div>

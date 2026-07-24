@@ -1,4 +1,7 @@
-// One-off brand asset generator. Re-run after changing ext-assets/nora_hub_transparent.png.
+// One-off brand asset generator. The app icon/favicon/OG image are pure text
+// ("NORA" + "HUB"), matching the in-app NoraHubWordmark component's white
+// variant - no external logo image involved. Re-run after changing the
+// wordmark's colors/style in src/components/NoraHubWordmark.tsx.
 // Requires sharp, which isn't a project dependency: run `npm install --no-save sharp` first.
 import sharp from 'sharp';
 import fs from 'fs';
@@ -8,62 +11,49 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const pub = (p) => path.join(root, 'public', p);
-const ext = (p) => path.join(root, 'ext-assets', p);
 
 const BLACK = '#000000';
-// ext-assets/nora_hub_transparent.png: the official NF monogram + "NORA HUB" wordmark, white ink on transparent.
-const LOGO_RATIO = 1616 / 1584;
+const NORA_COLOR = '#FFFFFF';
+const HUB_COLOR = '#F5D3C6'; // matches NoraHubWordmark's white-variant accent
+
+// Renders "NORA" over "HUB", centered as a block, at the given font sizes.
+function wordmarkSvg(width, height, noraSize, hubSize, gap) {
+  const blockHeight = noraSize + gap + hubSize;
+  const top = (height - blockHeight) / 2;
+  const noraY = top + noraSize / 2;
+  const hubY = top + noraSize + gap + hubSize / 2;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="${BLACK}" />
+  <text x="50%" y="${noraY}" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="${noraSize}" letter-spacing="${noraSize * 0.06}" fill="${NORA_COLOR}">NORA</text>
+  <text x="50%" y="${hubY}" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="${hubSize}" letter-spacing="${hubSize * 0.06}" fill="${HUB_COLOR}">HUB</text>
+</svg>`;
+}
 
 async function makeAppIcon(size, outFile) {
-  // Keep the mark within the ~80% maskable safe zone.
-  const logoWidth = Math.round(size * 0.66);
-  const logoHeight = Math.round(logoWidth * LOGO_RATIO);
-  const logoBuf = await sharp(ext('nora_hub_transparent.png')).resize(logoWidth, logoHeight).toBuffer();
-
-  await sharp({
-    create: { width: size, height: size, channels: 4, background: BLACK },
-  })
-    .composite([
-      { input: logoBuf, left: Math.round((size - logoWidth) / 2), top: Math.round((size - logoHeight) / 2) },
-    ])
-    .png()
-    .toFile(pub(outFile));
-
+  // Keep the wordmark within the ~80% maskable safe zone.
+  const wordSize = size * 0.195;
+  const gap = size * 0.047;
+  const svg = wordmarkSvg(size, size, wordSize, wordSize, gap);
+  await sharp(Buffer.from(svg)).png().toFile(pub(outFile));
   console.log('wrote', outFile);
 }
 
 async function makeOgImage(outFile) {
   const width = 1200;
   const height = 630;
-
-  const logoHeight = 520;
-  const logoWidth = Math.round(logoHeight / LOGO_RATIO);
-  const logoBuf = await sharp(ext('nora_hub_transparent.png')).resize(logoWidth, logoHeight).toBuffer();
-
-  await sharp({
-    create: { width, height, channels: 4, background: BLACK },
-  })
-    .composite([
-      { input: logoBuf, left: Math.round((width - logoWidth) / 2), top: Math.round((height - logoHeight) / 2) },
-    ])
-    .png()
-    .toFile(pub(outFile));
-
+  const svg = wordmarkSvg(width, height, 110, 110, 26);
+  await sharp(Buffer.from(svg)).png().toFile(pub(outFile));
   console.log('wrote', outFile);
 }
 
 async function makeFavicon(outFile) {
-  // Downscale before embedding as base64 - the source is 1584x1616, which would
-  // otherwise bloat the SVG to 500+ KB for an asset loaded on every page view.
-  const smallBuf = await sharp(ext('nora_hub_transparent.png')).resize(240).png().toBuffer();
-  const b64 = smallBuf.toString('base64');
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
-  <rect width="100" height="100" rx="22" fill="#000000" />
-  <image href="data:image/png;base64,${b64}" x="17" y="9" width="66" height="67.3" />
-</svg>
-`;
+  const svg = wordmarkSvg(100, 100, 19.5, 19.5, 4.7).replace(
+    '<rect width="100" height="100" fill="#000000" />',
+    '<rect width="100" height="100" rx="22" fill="#000000" />'
+  );
   fs.writeFileSync(pub(outFile), svg);
-  console.log('wrote', outFile, `(${(svg.length / 1024).toFixed(0)} KB)`);
+  console.log('wrote', outFile, `(${(svg.length / 1024).toFixed(1)} KB)`);
 }
 
 await makeAppIcon(192, 'pwa-192.png');

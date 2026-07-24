@@ -1,18 +1,31 @@
 // Nora Hub Service Worker for PWA Offline support
-const CACHE_NAME = 'nora-hub-v1';
+//
+// Bump CACHE_VERSION on any deploy where you need to force a hard reset of
+// clients stuck on a broken cache. Under normal operation this isn't needed:
+// the app shell (index.html, manifest, favicon) is served network-first, so
+// each deploy is picked up automatically without a version bump. Vite's
+// build hashes JS/CSS filenames, so those can safely stay cache-first
+// forever - a content change always produces a new filename.
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `nora-hub-${CACHE_VERSION}`;
+
 // Paths are prefixed with /hub/ to match vite.config.ts's `base` option.
-const ASSETS_TO_CACHE = [
+const APP_SHELL = [
   '/hub/',
   '/hub/index.html',
   '/hub/manifest.json',
   '/hub/favicon.svg'
 ];
 
+function isAppShellRequest(request) {
+  if (request.mode === 'navigate') return true;
+  const path = new URL(request.url).pathname;
+  return APP_SHELL.includes(path);
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );
   self.skipWaiting();
 });
@@ -34,6 +47,27 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  // App shell: network-first, so a new deploy is visible on the very next
+  // load instead of waiting on cache invalidation. Falls back to cache only
+  // when offline.
+  if (isAppShellRequest(event.request)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/hub/index.html')))
+    );
+    return;
+  }
+
+  // Everything else (hashed build assets): cache-first is safe since a
+  // content change always produces a new filename.
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -48,11 +82,6 @@ self.addEventListener('fetch', (event) => {
           cache.put(event.request, responseToCache);
         });
         return response;
-      }).catch(() => {
-        // Return index.html for navigation requests when offline
-        if (event.request.mode === 'navigate') {
-          return caches.match('/hub/index.html');
-        }
       });
     })
   );
