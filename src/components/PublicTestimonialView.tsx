@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TestimonialItem } from '../types';
-import { SignatureLogo } from './SignatureLogo';
+import { NoraHubWordmark } from './NoraHubWordmark';
 import { WatercolorBackground } from './WatercolorBackground';
 import { Sparkle } from './Sparkle';
 import { Heart, Star, Send, CheckCircle2, Lock, Share2, Check } from 'lucide-react';
@@ -51,12 +51,18 @@ export const PublicTestimonialView: React.FC<PublicTestimonialViewProps> = ({
   };
 
   return (
-    <div className="relative min-h-screen bg-[#F7EFE6] text-[#171512] flex flex-col justify-between p-4 sm:p-6 md:p-8 font-body overflow-x-hidden select-none">
+    <div
+      className="relative min-h-screen bg-[#F7EFE6] text-[#171512] flex flex-col justify-between p-4 sm:p-6 md:p-8 font-body overflow-x-hidden select-none"
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top))',
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+      }}
+    >
       <WatercolorBackground />
 
       {/* Top Header Bar */}
       <div className="relative z-10 max-w-xl mx-auto w-full flex items-center justify-between pt-2 pb-4 border-b border-[#171512]/10">
-        <SignatureLogo size="sm" />
+        <NoraHubWordmark size="sm" />
         <button
           onClick={onGoToPortal}
           className="px-3 py-1.5 rounded-xl bg-[#F7EFE6] border border-[#171512]/15 text-[#171512]/70 hover:text-[#B72A32] font-label text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5 active:scale-95 transition-transform"
@@ -68,7 +74,7 @@ export const PublicTestimonialView: React.FC<PublicTestimonialViewProps> = ({
 
       {/* Main Card */}
       <main className="relative z-10 max-w-xl mx-auto w-full my-auto py-6">
-        <div className="bg-[#F7EFE6]/90 backdrop-blur-md rounded-3xl border border-[#171512]/15 shadow-xl p-6 sm:p-8 space-y-6">
+        <div className="bg-white/95 backdrop-blur-md rounded-3xl border border-[#171512]/15 shadow-xl p-6 sm:p-8 space-y-6">
           
           {/* Section Header */}
           <div className="text-center space-y-2">

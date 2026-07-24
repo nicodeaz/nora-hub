@@ -72,7 +72,7 @@ export const HubCard: React.FC<HubCardProps> = ({
   return (
     <div
       onClick={() => onAction(card)}
-      className={`group relative flex flex-col justify-between rounded-2xl bg-white p-5 sm:p-6 border ${currentAccent.border} shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 select-none`}
+      className={`group relative flex flex-col justify-between rounded-2xl bg-white p-5 sm:p-6 border ${currentAccent.border} shadow-md hover:shadow-lg transition-[box-shadow,transform,border-color] duration-300 cursor-pointer transform hover:-translate-y-1 select-none`}
     >
       {/* Top Accent Indicator Bar */}
       <div className={`absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl ${currentAccent.indicator}`} />

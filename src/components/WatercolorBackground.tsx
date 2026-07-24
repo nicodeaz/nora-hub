@@ -4,14 +4,16 @@ import { Sparkle } from './Sparkle';
 export const WatercolorBackground: React.FC = () => {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Rosa Spot (Top-Right) */}
-      <div className="absolute -top-24 -right-24 w-80 h-80 sm:w-[480px] sm:h-[480px] rounded-full watercolor-spot-pink blur-3xl opacity-70 animate-watercolor-1" />
+      {/* Rosa Spot (Top-Right) - the radial-gradient already fades to transparent,
+          so no blur filter is needed; that would just force a repaint every frame
+          of the animation for no visible gain. */}
+      <div className="absolute -top-24 -right-24 w-80 h-80 sm:w-[480px] sm:h-[480px] rounded-full watercolor-spot-pink opacity-70 animate-watercolor-1" />
 
       {/* Verde Azulado Spot (Bottom-Left) */}
-      <div className="absolute -bottom-32 -left-20 w-80 h-80 sm:w-[500px] sm:h-[500px] rounded-full watercolor-spot-teal blur-3xl opacity-60 animate-watercolor-2" />
+      <div className="absolute -bottom-32 -left-20 w-80 h-80 sm:w-[500px] sm:h-[500px] rounded-full watercolor-spot-teal opacity-60 animate-watercolor-2" />
 
       {/* Dorado Spot (Center-Right Soft Accent) */}
-      <div className="absolute top-1/3 -right-28 w-72 h-72 sm:w-[420px] sm:h-[420px] rounded-full watercolor-spot-gold blur-3xl opacity-50 animate-watercolor-3" />
+      <div className="absolute top-1/3 -right-28 w-72 h-72 sm:w-[420px] sm:h-[420px] rounded-full watercolor-spot-gold opacity-50 animate-watercolor-3" />
 
       {/* Scattered Organic Sparkles */}
       <div className="absolute top-[12%] left-[8%] opacity-60">

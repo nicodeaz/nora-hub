@@ -77,11 +77,11 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#171512]/60 backdrop-blur-xs animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-[#F7EFE6] rounded-t-3xl sm:rounded-3xl border border-[#171512]/20 shadow-2xl overflow-hidden flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh]">
-        
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pb-[env(safe-area-inset-bottom)] sm:pb-4 bg-[#171512]/60 backdrop-blur-xs animate-fade-in">
+      <div className="relative w-full max-w-2xl bg-white rounded-t-3xl sm:rounded-3xl border border-[#171512]/20 shadow-2xl overflow-hidden flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh]">
+
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#171512]/10 bg-[#F7EFE6]">
+        <div className="flex items-center justify-between p-5 border-b border-[#171512]/10 bg-white">
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-[#B72A32]" />
             <h2 className="font-label text-base uppercase tracking-wider font-bold text-[#171512]">
@@ -105,7 +105,7 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
               className={`py-1.5 px-3 rounded-xl font-label text-xs uppercase tracking-wider font-semibold cursor-pointer ${
                 activeTab === 'list'
                   ? 'bg-[#B72A32] text-[#F7EFE6]'
-                  : 'bg-[#F7EFE6] text-[#171512]/60 hover:text-[#171512]'
+                  : 'bg-[#171512]/[0.06] hover:bg-[#171512]/10 text-[#171512]/70'
               }`}
             >
               Mis Notas ({notes.length})
@@ -115,7 +115,7 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
               className={`py-1.5 px-3 rounded-xl font-label text-xs uppercase tracking-wider font-semibold cursor-pointer flex items-center gap-1 ${
                 activeTab === 'edit'
                   ? 'bg-[#B72A32] text-[#F7EFE6]'
-                  : 'bg-[#F7EFE6] text-[#171512]/60 hover:text-[#171512]'
+                  : 'bg-[#171512]/[0.06] hover:bg-[#171512]/10 text-[#171512]/70'
               }`}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -125,7 +125,7 @@ export const QuickNotesModal: React.FC<QuickNotesModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-4">
+        <div className="p-6 overflow-y-auto overscroll-contain flex-1 space-y-4">
           {activeTab === 'list' ? (
             notes.length === 0 ? (
               <div className="text-center py-12 text-[#171512]/50 space-y-3 font-body">

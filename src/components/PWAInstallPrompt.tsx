@@ -19,7 +19,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#171512]/60 backdrop-blur-xs animate-fade-in">
-      <div className="relative w-full max-w-md bg-[#F7EFE6] rounded-3xl border border-[#171512]/20 shadow-2xl p-6 space-y-5">
+      <div className="relative w-full max-w-md bg-white rounded-3xl border border-[#171512]/20 shadow-2xl p-6 space-y-5">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#171512]/10 pb-3">

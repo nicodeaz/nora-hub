@@ -6,7 +6,6 @@ import { Plus, Pin, Filter, Compass } from 'lucide-react';
 
 interface DashboardGridProps {
   cards: HubCardItem[];
-  searchTerm: string;
   onCardAction: (card: HubCardItem) => void;
   onTogglePin: (id: string) => void;
   onEditCard: (card: HubCardItem) => void;
@@ -16,7 +15,6 @@ interface DashboardGridProps {
 
 export const DashboardGrid: React.FC<DashboardGridProps> = ({
   cards,
-  searchTerm,
   onCardAction,
   onTogglePin,
   onEditCard,
@@ -25,18 +23,10 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
 
-  // Filter Cards by Search Term and Selected Category
-  const filteredCards = cards.filter((card) => {
-    const matchesSearch =
-      card.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      card.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      card.category.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesCategory =
-      selectedCategory === 'todos' || card.category === selectedCategory;
-
-    return matchesSearch && matchesCategory;
-  });
+  // Filter Cards by Selected Category
+  const filteredCards = cards.filter(
+    (card) => selectedCategory === 'todos' || card.category === selectedCategory
+  );
 
   const pinnedCards = filteredCards.filter((card) => card.isPinned);
   const unpinnedCards = filteredCards.filter((card) => !card.isPinned);
@@ -78,7 +68,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
       </div>
 
       {/* Pinned Cards Section (if search/category contains pinned cards) */}
-      {pinnedCards.length > 0 && selectedCategory === 'todos' && !searchTerm && (
+      {pinnedCards.length > 0 && selectedCategory === 'todos' && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-[#B72A32] font-bold">
             <Pin className="w-4 h-4 fill-[#B72A32]" />
@@ -101,7 +91,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
 
       {/* Main Grid Section */}
       <div className="space-y-4">
-        {pinnedCards.length > 0 && selectedCategory === 'todos' && !searchTerm && (
+        {pinnedCards.length > 0 && selectedCategory === 'todos' && (
           <div className="font-label text-xs uppercase tracking-[0.2em] text-[#171512]/50 font-bold pt-2">
             <span>Todos los Recursos</span>
           </div>
@@ -114,7 +104,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
               No se encontraron accesos
             </h3>
             <p className="font-body text-xs text-[#171512]/60 max-w-md mx-auto">
-              No hay tarjetas que coincidan con &quot;{searchTerm}&quot;. Intenta borrar la búsqueda o agregar una tarjeta personalizada.
+              No hay tarjetas en esta categoría todavía. Agrega una tarjeta personalizada.
             </p>
             <button
               onClick={onOpenAddCard}
@@ -126,7 +116,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-            {(selectedCategory === 'todos' && !searchTerm ? unpinnedCards : filteredCards).map((card) => (
+            {(selectedCategory === 'todos' ? unpinnedCards : filteredCards).map((card) => (
               <HubCard
                 key={card.id}
                 card={card}

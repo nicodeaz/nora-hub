@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { SignatureLogo } from './SignatureLogo';
+import { NoraHubWordmark } from './NoraHubWordmark';
 import { WatercolorBackground } from './WatercolorBackground';
-import { ArrowRight, Delete, Heart, ShieldAlert } from 'lucide-react';
+import { Delete, Heart, ShieldAlert } from 'lucide-react';
 
 interface PinLockScreenProps {
   correctPin: string;
@@ -21,6 +21,9 @@ const formatCountdown = (ms: number): string => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
+const KEYPAD_BUTTON =
+  'flex items-center justify-center w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] rounded-full bg-[#171512]/[0.05] hover:bg-[#171512]/10 active:scale-90 border border-[#171512]/10 text-[#171512] font-label font-medium text-2xl sm:text-3xl tracking-normal normal-case transition-[background-color,transform] duration-150 cursor-pointer touch-manipulation';
+
 export const PinLockScreen: React.FC<PinLockScreenProps> = ({
   correctPin,
   onSuccess,
@@ -33,21 +36,20 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
     const saved = Number(localStorage.getItem(LOCKED_UNTIL_KEY) || 0);
     return saved > Date.now() ? saved : 0;
   });
-  const [now, setNow] = useState<number>(Date.now());
+  const [now, setNow] = useState<Date>(new Date());
   const attemptsRef = useRef<number>(Number(localStorage.getItem(ATTEMPTS_KEY) || 0));
 
-  const isLocked = lockedUntil > now;
+  const isLocked = lockedUntil > now.getTime();
 
-  // Tick the countdown while locked out
+  // Live clock, ticking every second for as long as the lock screen is shown.
   useEffect(() => {
-    if (!isLocked) return;
-    const interval = setInterval(() => setNow(Date.now()), 500);
+    const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
-  }, [isLocked]);
+  }, []);
 
   // Clear lock state once the cooldown expires
   useEffect(() => {
-    if (lockedUntil && lockedUntil <= now) {
+    if (lockedUntil && lockedUntil <= now.getTime()) {
       setLockedUntil(0);
       localStorage.removeItem(LOCKED_UNTIL_KEY);
     }
@@ -60,7 +62,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
       setPin(nextPin);
       setError(false);
 
-      // Auto submit on 4 digits
+      // Auto submit on 4 digits, like a native lock screen
       if (nextPin.length === 4) {
         verifyPin(nextPin);
       }
@@ -94,7 +96,6 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
       localStorage.removeItem(ATTEMPTS_KEY);
       localStorage.setItem(LOCKED_UNTIL_KEY, String(until));
       setLockedUntil(until);
-      setNow(Date.now());
       setErrorMessage('Demasiados intentos incorrectos. Portal bloqueado temporalmente.');
     } else {
       const remaining = MAX_ATTEMPTS - nextAttempts;
@@ -104,17 +105,6 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
     setTimeout(() => setPin(''), 500);
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (isLocked) return;
-    if (pin.length === 4) {
-      verifyPin(pin);
-    } else {
-      setError(true);
-      setErrorMessage('Ingresa los 4 dígitos del PIN.');
-    }
-  };
-
   // Listen to physical keyboard events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -122,79 +112,88 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
         handleKeyPress(e.key);
       } else if (e.key === 'Backspace') {
         handleDelete();
-      } else if (e.key === 'Enter') {
-        handleSubmit();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pin, correctPin, isLocked]);
 
+  const timeStr = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const dateStr = now.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden bg-[#F7EFE6] font-body">
+    <div className="fixed inset-0 w-full h-full bg-[#F7EFE6] font-body overflow-hidden select-none">
       <WatercolorBackground />
 
-      {/* Main Lock Card */}
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md bg-[#F7EFE6]/80 backdrop-blur-md rounded-2xl p-6 sm:p-8 border border-[#171512]/10 shadow-xl text-center space-y-6">
-
-        {/* Brand Logo */}
-        <div className="flex flex-col items-center justify-center pt-2 pb-1">
-          <SignatureLogo size="xl" />
+      <div
+        className="relative z-10 flex flex-col h-full w-full px-6"
+        style={{
+          paddingTop: 'max(1.75rem, env(safe-area-inset-top))',
+          paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))',
+        }}
+      >
+        {/* Top: small wordmark, like the carrier label on iOS */}
+        <div className="flex justify-center shrink-0">
+          <NoraHubWordmark size="sm" className="opacity-70" />
         </div>
 
-        {/* Welcome Tagline */}
-        <p className="font-body text-sm sm:text-base text-[#171512]/80 italic">
-          Ingresa tu PIN de 4 dígitos para acceder a tus accesos y archivos.
-        </p>
-
-        {isLocked ? (
-          <div className="py-3 px-4 rounded-xl bg-[#B72A32]/10 border border-[#B72A32]/30 space-y-2 animate-fade-in">
-            <div className="flex items-center justify-center gap-2 text-[#B72A32]">
-              <ShieldAlert className="w-5 h-5" />
-              <span className="font-label text-xs uppercase tracking-wider font-bold">Portal bloqueado</span>
-            </div>
-            <p className="font-body text-xs text-[#171512]/70">
-              Demasiados intentos incorrectos. Intenta nuevamente en{' '}
-              <strong className="font-mono text-[#B72A32]">{formatCountdown(lockedUntil - now)}</strong>.
+        {/* Clock + date + PIN status, vertically centered like an iOS lock screen */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 min-h-0">
+          <div className="text-center">
+            <p
+              className="font-label leading-none text-[#171512] text-[4.5rem] sm:text-8xl"
+              style={{ fontWeight: 300 }}
+            >
+              {timeStr}
+            </p>
+            <p className="font-label text-xs sm:text-sm tracking-widest text-[#171512]/60 mt-2 capitalize">
+              {dateStr}
             </p>
           </div>
-        ) : (
-          <>
-            {/* PIN Display Dots */}
-            <div className={`flex justify-center items-center gap-3 py-2 transition-transform duration-200 ${error ? 'animate-bounce text-[#B72A32]' : ''}`}>
-              {[0, 1, 2, 3].map((index) => {
-                const isFilled = pin.length > index;
-                return (
-                  <div
-                    key={index}
-                    className={`w-4 h-4 rounded-full transition-all duration-300 border-2 ${
-                      isFilled
-                        ? 'bg-[#B72A32] border-[#B72A32] scale-110 shadow-sm'
-                        : 'bg-transparent border-[#171512]/30'
-                    }`}
-                  />
-                );
-              })}
-            </div>
 
-            {/* Error Feedback */}
-            {error && (
-              <p className="text-xs font-label uppercase tracking-wider text-[#B72A32] font-semibold animate-fade-in">
-                {errorMessage}
+          {isLocked ? (
+            <div className="flex flex-col items-center gap-2 text-center animate-fade-in px-4">
+              <ShieldAlert className="w-5 h-5 text-[#B72A32]" />
+              <p className="font-label text-xs uppercase tracking-wider font-bold text-[#B72A32]">Portal bloqueado</p>
+              <p className="font-body text-xs text-[#171512]/70">
+                Intenta nuevamente en{' '}
+                <strong className="font-mono text-[#B72A32]">{formatCountdown(lockedUntil - now.getTime())}</strong>
               </p>
-            )}
-          </>
-        )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <div className={`flex items-center gap-3.5 ${error ? 'animate-shake' : ''}`}>
+                {[0, 1, 2, 3].map((index) => {
+                  const isFilled = pin.length > index;
+                  return (
+                    <div
+                      key={index}
+                      className={`w-3.5 h-3.5 rounded-full transition-all duration-150 border-2 ${
+                        isFilled
+                          ? `${error ? 'bg-[#B72A32] border-[#B72A32]' : 'bg-[#171512] border-[#171512]'} scale-110`
+                          : 'bg-transparent border-[#171512]/30'
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+              <p className={`font-label text-[11px] uppercase tracking-wider font-semibold h-4 ${error ? 'text-[#B72A32]' : 'text-[#171512]/50'}`}>
+                {error ? errorMessage : 'Ingresa tu PIN'}
+              </p>
+            </div>
+          )}
+        </div>
 
-        {/* On-Screen Keypad for Mobile / Touch */}
-        <div className={`grid grid-cols-3 gap-2.5 max-w-[260px] mx-auto pt-2 transition-opacity ${isLocked ? 'opacity-40 pointer-events-none' : ''}`}>
+        {/* iOS-style circular keypad */}
+        <div className={`shrink-0 grid grid-cols-3 gap-x-6 gap-y-3 sm:gap-x-8 sm:gap-y-4 justify-items-center mx-auto transition-opacity ${isLocked ? 'opacity-30 pointer-events-none' : ''}`}>
           {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
             <button
               key={num}
               type="button"
               onClick={() => handleKeyPress(num)}
               disabled={isLocked}
-              className="h-12 rounded-xl bg-[#F7EFE6] hover:bg-[#F5D3C6]/50 active:scale-95 border border-[#171512]/15 text-lg font-label font-semibold text-[#171512] shadow-sm transition-all duration-150 flex items-center justify-center cursor-pointer"
+              className={KEYPAD_BUTTON}
             >
               {num}
             </button>
@@ -204,7 +203,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
             type="button"
             onClick={() => handleKeyPress('0')}
             disabled={isLocked}
-            className="h-12 rounded-xl bg-[#F7EFE6] hover:bg-[#F5D3C6]/50 active:scale-95 border border-[#171512]/15 text-lg font-label font-semibold text-[#171512] shadow-sm transition-all duration-150 flex items-center justify-center cursor-pointer"
+            className={KEYPAD_BUTTON}
           >
             0
           </button>
@@ -212,43 +211,26 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
             type="button"
             onClick={handleDelete}
             disabled={isLocked}
-            className="h-12 rounded-xl bg-transparent hover:bg-[#B72A32]/10 text-[#B72A32] flex items-center justify-center cursor-pointer transition-colors active:scale-95"
+            className="flex items-center justify-center w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] text-[#171512]/60 hover:text-[#B72A32] cursor-pointer active:scale-90 transition-[color,transform] touch-manipulation"
             title="Borrar dígito"
           >
-            <Delete className="w-5 h-5" />
+            <Delete className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Action Button */}
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={() => handleSubmit()}
-            disabled={pin.length < 4 || isLocked}
-            className={`w-full py-3.5 px-6 rounded-xl font-label text-xs uppercase tracking-[0.2em] font-semibold text-[#F7EFE6] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md ${
-              pin.length === 4 && !isLocked
-                ? 'bg-[#B72A32] hover:bg-[#962127] hover:shadow-lg active:scale-[0.99]'
-                : 'bg-[#171512]/30 cursor-not-allowed opacity-60'
-            }`}
-          >
-            <span>Entrar al Portal</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Public Testimonials Link for Students/Visitors */}
-        {onOpenPublicTestimonials && (
-          <div className="pt-3 border-t border-[#171512]/10">
+        {/* Bottom: minimal utility link, like iOS's "Emergency" text */}
+        <div className="shrink-0 flex justify-center pt-6">
+          {onOpenPublicTestimonials && (
             <button
               type="button"
               onClick={onOpenPublicTestimonials}
-              className="w-full py-2.5 px-4 rounded-xl bg-[#F7EFE6] hover:bg-[#F5D3C6]/60 border border-[#171512]/15 text-[#171512] font-label text-[11px] uppercase tracking-wider font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
+              className="font-label text-[11px] uppercase tracking-wider font-semibold text-[#171512]/50 hover:text-[#B72A32] flex items-center gap-1.5 cursor-pointer transition-colors"
             >
-              <Heart className="w-3.5 h-3.5 text-[#B72A32] fill-[#B72A32]" />
+              <Heart className="w-3 h-3" />
               <span>Dejar una Reseña / Testimonio</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

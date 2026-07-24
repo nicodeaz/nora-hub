@@ -15,8 +15,8 @@ import { MobileNav } from './components/MobileNav';
 import { PublicTestimonialView } from './components/PublicTestimonialView';
 import { LoadingScreen } from './components/LoadingScreen';
 
-const MIN_LOADING_MS = 700;
-const LOADING_FADE_MS = 500;
+const MIN_LOADING_MS = 150;
+const LOADING_FADE_MS = 250;
 
 export default function App() {
   // Branded splash overlay: waits for web fonts + a minimum display time, then fades out.
@@ -85,7 +85,6 @@ export default function App() {
   });
 
   // UI State
-  const [searchTerm, setSearchTerm] = useState<string>('');
   const [isNotesOpen, setIsNotesOpen] = useState<boolean>(false);
   const [isPressKitOpen, setIsPressKitOpen] = useState<boolean>(false);
   const [isTestimonialsOpen, setIsTestimonialsOpen] = useState<boolean>(false);
@@ -117,6 +116,16 @@ export default function App() {
       setIsConfigOpen(true);
     }
   };
+
+  // Lock body scroll while any modal is open, so dragging past a modal's own
+  // scroll boundary on mobile can't chain into scrolling the page behind it.
+  const isAnyModalOpen = isNotesOpen || isPressKitOpen || isTestimonialsOpen || isConfigOpen || isPwaPromptOpen;
+  useEffect(() => {
+    document.body.style.overflow = isAnyModalOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAnyModalOpen]);
 
   // Sync to LocalStorage
   useEffect(() => {
@@ -309,8 +318,6 @@ export default function App() {
 
       {/* Top Header */}
       <Header
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
         onOpenNotes={() => setIsNotesOpen(true)}
         onOpenSettings={() => {
           setEditingCardItem(null);
@@ -332,7 +339,6 @@ export default function App() {
       <main>
         <DashboardGrid
           cards={config.cards}
-          searchTerm={searchTerm}
           onCardAction={handleCardAction}
           onTogglePin={handleTogglePin}
           onEditCard={(card) => {
