@@ -1,0 +1,39 @@
+{
+  "id": "/hub/",
+  "short_name": "Nora Hub",
+  "name": "Nora Hub · Portal Privado",
+  "description": "Portal Privado y Cuaderno Personal para Nora Filmus",
+  "icons": [
+    {
+      "src": "/hub/pwa-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/hub/pwa-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/hub/pwa-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/hub/pwa-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/hub/",
+  "scope": "/hub/",
+  "background_color": "#F7EFE6",
+  "theme_color": "#F7EFE6",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "es-AR"
+}

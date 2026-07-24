@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+@theme {
+  --font-signature: 'Kaushan Script', 'Caveat', cursive;
+  --font-title: 'Permanent Marker', cursive;
+  --font-label: 'Montserrat', sans-serif;
+  --font-body: 'PT Serif', serif;
+
+  --color-crema: #F7EFE6;
+  --color-tinta: #171512;
+  --color-rojo: #B72A32;
+  --color-rosa: #F5D3C6;
+  --color-verde: #7BA8A0;
+  --color-dorado: #E8B34E;
+}
+
+@layer base {
+  body {
+    font-family: 'PT Serif', serif;
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .font-signature {
+    font-family: 'Kaushan Script', 'Caveat', cursive !important;
+  }
+  .font-title {
+    font-family: 'Permanent Marker', cursive !important;
+    letter-spacing: 0.05em;
+  }
+  .font-label {
+    font-family: 'Montserrat', sans-serif !important;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .font-body {
+    font-family: 'PT Serif', serif !important;
+  }
+}
+
+/* Custom Keyframe Animations */
+@keyframes sparkleTwinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.85) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(15deg);
+  }
+}
+
+@keyframes watercolorFloat {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(12px, -15px) scale(1.05);
+  }
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out both;
+}
+
+@keyframes loadingMarkIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-loading-mark {
+  animation: loadingMarkIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes loadingBarSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+.animate-loading-bar {
+  animation: loadingBarSweep 1.3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-sparkle {
+  animation: sparkleTwinkle 3.5s ease-in-out infinite;
+}
+
+.animate-sparkle-delayed {
+  animation: sparkleTwinkle 4.2s ease-in-out 1.2s infinite;
+}
+
+.animate-watercolor-1 {
+  animation: watercolorFloat 12s ease-in-out infinite;
+}
+
+.animate-watercolor-2 {
+  animation: watercolorFloat 16s ease-in-out 3s infinite reverse;
+}
+
+.animate-watercolor-3 {
+  animation: watercolorFloat 14s ease-in-out 6s infinite;
+}
+
+/* Custom Soft Watercolor Blurs */
+.watercolor-spot-pink {
+  background: radial-gradient(circle, rgba(245, 211, 198, 0.75) 0%, rgba(245, 211, 198, 0) 70%);
+}
+
+.watercolor-spot-teal {
+  background: radial-gradient(circle, rgba(123, 168, 160, 0.6) 0%, rgba(123, 168, 160, 0) 70%);
+}
+
+.watercolor-spot-gold {
+  background: radial-gradient(circle, rgba(232, 179, 78, 0.55) 0%, rgba(232, 179, 78, 0) 70%);
+}
+
+/* Custom Scrollbar for Handcrafted feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F7EFE6;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E8B34E;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B72A32;
+}
+
