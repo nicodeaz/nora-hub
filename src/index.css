@@ -5,6 +5,7 @@
   --font-title: 'Permanent Marker', cursive;
   --font-label: 'Montserrat', sans-serif;
   --font-body: 'PT Serif', serif;
+  --font-poster: 'Bebas Neue', sans-serif;
 
   --color-crema: #F7EFE6;
   --color-tinta: #171512;
@@ -38,6 +39,10 @@
   }
   .font-body {
     font-family: 'PT Serif', serif !important;
+  }
+  .font-poster {
+    font-family: 'Bebas Neue', sans-serif !important;
+    letter-spacing: 0.04em;
   }
 }
 

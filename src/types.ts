@@ -10,7 +10,7 @@ export interface HubCardItem {
   accentColor: 'red' | 'pink' | 'teal' | 'gold' | 'ink';
   isPinned?: boolean;
   isCustom?: boolean;
-  actionType?: 'link' | 'press-kit' | 'testimonials' | 'notes';
+  actionType?: 'link' | 'press-kit' | 'testimonials' | 'notes' | 'reservations';
   badgeText?: string;
 }
 
@@ -41,8 +41,24 @@ export interface PressBio {
   text: string;
 }
 
+// A workshop reservation submitted on darelsalto.com, fetched from
+// mail/reservations.php (see ReservationsModal). Nora-Hub never writes these
+// directly — it only reads the list and PATCHes the `paid` flag.
+export interface ReservationRecord {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string;
+  nacionalidad: string;
+  opcionPago: 'sena10' | 'total30';
+  monto: string;
+  lang: 'es' | 'en';
+  createdAt: string;
+  paid: boolean;
+  paidAt: string | null;
+}
+
 export interface AppConfig {
-  pin: string;
   cards: HubCardItem[];
   siteUrl: string;
   driveUrl: string;

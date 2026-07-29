@@ -8,6 +8,7 @@ import { WatercolorBackground } from './components/WatercolorBackground';
 import { QuickNotesModal } from './components/QuickNotesModal';
 import { PressKitModal } from './components/PressKitModal';
 import { TestimonialsModal } from './components/TestimonialsModal';
+import { ReservationsModal } from './components/ReservationsModal';
 import { HubConfigModal } from './components/HubConfigModal';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
@@ -88,6 +89,7 @@ export default function App() {
   const [isNotesOpen, setIsNotesOpen] = useState<boolean>(false);
   const [isPressKitOpen, setIsPressKitOpen] = useState<boolean>(false);
   const [isTestimonialsOpen, setIsTestimonialsOpen] = useState<boolean>(false);
+  const [isReservationsOpen, setIsReservationsOpen] = useState<boolean>(false);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
   const [isPwaPromptOpen, setIsPwaPromptOpen] = useState<boolean>(false);
   const [editingCardItem, setEditingCardItem] = useState<HubCardItem | null>(null);
@@ -96,14 +98,15 @@ export default function App() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isIos, setIsIos] = useState<boolean>(false);
 
-  const [mobileTab, setMobileTab] = useState<'home' | 'notes' | 'press' | 'testimonials' | 'settings'>('home');
+  const [mobileTab, setMobileTab] = useState<'home' | 'notes' | 'press' | 'testimonials' | 'reservations' | 'settings'>('home');
 
-  const handleMobileTabSelect = (tab: 'home' | 'notes' | 'press' | 'testimonials' | 'settings') => {
+  const handleMobileTabSelect = (tab: 'home' | 'notes' | 'press' | 'testimonials' | 'reservations' | 'settings') => {
     setMobileTab(tab);
     if (tab === 'home') {
       setIsNotesOpen(false);
       setIsPressKitOpen(false);
       setIsTestimonialsOpen(false);
+      setIsReservationsOpen(false);
       setIsConfigOpen(false);
     } else if (tab === 'notes') {
       setIsNotesOpen(true);
@@ -111,6 +114,8 @@ export default function App() {
       setIsPressKitOpen(true);
     } else if (tab === 'testimonials') {
       setIsTestimonialsOpen(true);
+    } else if (tab === 'reservations') {
+      setIsReservationsOpen(true);
     } else if (tab === 'settings') {
       setEditingCardItem(null);
       setIsConfigOpen(true);
@@ -119,7 +124,7 @@ export default function App() {
 
   // Lock body scroll while any modal is open, so dragging past a modal's own
   // scroll boundary on mobile can't chain into scrolling the page behind it.
-  const isAnyModalOpen = isNotesOpen || isPressKitOpen || isTestimonialsOpen || isConfigOpen || isPwaPromptOpen;
+  const isAnyModalOpen = isNotesOpen || isPressKitOpen || isTestimonialsOpen || isReservationsOpen || isConfigOpen || isPwaPromptOpen;
   useEffect(() => {
     document.body.style.overflow = isAnyModalOpen ? 'hidden' : '';
     return () => {
@@ -197,11 +202,14 @@ export default function App() {
       setIsTestimonialsOpen(true);
     } else if (card.actionType === 'notes') {
       setIsNotesOpen(true);
+    } else if (card.actionType === 'reservations') {
+      setIsReservationsOpen(true);
     } else {
       if (card.url.startsWith('#')) {
         if (card.url === '#prensa') setIsPressKitOpen(true);
         if (card.url === '#testimonios') setIsTestimonialsOpen(true);
         if (card.url === '#proyectos') setIsNotesOpen(true);
+        if (card.url === '#reservas') setIsReservationsOpen(true);
       } else {
         window.open(card.url, '_blank', 'noopener,noreferrer');
       }
@@ -304,7 +312,6 @@ export default function App() {
     // If locked, display PIN screen
     content = (
       <PinLockScreen
-        correctPin={config.pin}
         onSuccess={handleUnlockSuccess}
         onOpenPublicTestimonials={() => setIsPublicTestimonialMode(true)}
       />
@@ -325,6 +332,7 @@ export default function App() {
         }}
         onOpenPressKit={() => setIsPressKitOpen(true)}
         onOpenTestimonials={() => setIsTestimonialsOpen(true)}
+        onOpenReservations={() => setIsReservationsOpen(true)}
         onOpenAddCard={() => {
           setEditingCardItem(null);
           setIsConfigOpen(true);
@@ -391,6 +399,12 @@ export default function App() {
         onDeleteTestimonial={handleDeleteTestimonial}
       />
 
+      {/* 3b. Reservations Modal (Dar el Salto) */}
+      <ReservationsModal
+        isOpen={isReservationsOpen}
+        onClose={() => setIsReservationsOpen(false)}
+      />
+
       {/* 4. Configuration & JSON Editor Modal */}
       <HubConfigModal
         isOpen={isConfigOpen}
@@ -399,7 +413,6 @@ export default function App() {
         editingCard={editingCardItem}
         onSaveCard={handleSaveCard}
         onDeleteCard={handleDeleteCard}
-        onSaveConfig={setConfig}
         onResetToDefault={handleResetToDefault}
       />
 

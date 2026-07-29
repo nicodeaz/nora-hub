@@ -7,6 +7,7 @@ import {
   Download,
   Newspaper,
   Heart,
+  Ticket,
   Plus
 } from 'lucide-react';
 
@@ -15,6 +16,7 @@ interface HeaderProps {
   onOpenSettings: () => void;
   onOpenPressKit: () => void;
   onOpenTestimonials: () => void;
+  onOpenReservations: () => void;
   onOpenAddCard: () => void;
   onLock: () => void;
   canInstallPwa?: boolean;
@@ -35,6 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
   onOpenPressKit,
   onOpenTestimonials,
+  onOpenReservations,
   onOpenAddCard,
   onLock,
   canInstallPwa,
@@ -101,6 +104,11 @@ export const Header: React.FC<HeaderProps> = ({
             <button onClick={onOpenTestimonials} className={CHIP_BUTTON} title="Testimonios & Formulario">
               <Heart className="w-4 h-4 text-[#B72A32]" />
               <span>Testimonios</span>
+            </button>
+
+            <button onClick={onOpenReservations} className={CHIP_BUTTON} title="Reservas de Dar el Salto">
+              <Ticket className="w-4 h-4 text-[#7BA8A0]" />
+              <span>Reservas</span>
             </button>
 
             {canInstallPwa && (

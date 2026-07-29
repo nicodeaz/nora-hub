@@ -100,7 +100,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
         {filteredCards.length === 0 ? (
           <div className="text-center py-16 px-4 bg-white rounded-2xl border border-[#171512]/10 shadow-sm space-y-4">
             <Compass className="w-12 h-12 text-[#B72A32]/40 mx-auto animate-pulse" />
-            <h3 className="font-label text-base uppercase tracking-wider font-bold text-[#171512]">
+            <h3 className="font-poster text-2xl leading-none text-[#171512]">
               No se encontraron accesos
             </h3>
             <p className="font-body text-xs text-[#171512]/60 max-w-md mx-auto">

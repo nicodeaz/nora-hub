@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { AppConfig, HubCardItem, CardCategory } from '../types';
 import { Sparkle } from './Sparkle';
-import { X, Settings, Plus, RotateCcw, KeyRound, Check, Trash2 } from 'lucide-react';
+import { X, Settings, Plus, RotateCcw, KeyRound, Check, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
+import { PIN_GUARD_URL, getAdminToken, setAdminToken } from '../lib/backendConfig';
 
 interface HubConfigModalProps {
   isOpen: boolean;
@@ -10,7 +11,6 @@ interface HubConfigModalProps {
   editingCard?: HubCardItem | null;
   onSaveCard: (card: HubCardItem) => void;
   onDeleteCard?: (id: string) => void;
-  onSaveConfig: (newConfig: AppConfig) => void;
   onResetToDefault: () => void;
 }
 
@@ -21,7 +21,6 @@ export const HubConfigModal: React.FC<HubConfigModalProps> = ({
   editingCard,
   onSaveCard,
   onDeleteCard,
-  onSaveConfig,
   onResetToDefault,
 }) => {
   const [activeTab, setActiveTab] = useState<'card' | 'pin'>('card');
@@ -71,9 +70,12 @@ export const HubConfigModal: React.FC<HubConfigModalProps> = ({
     }
   }, [editingCard, isOpen]);
 
-  // Pin Form State
-  const [newPin, setNewPin] = useState(config.pin);
-  const [pinSaved, setPinSaved] = useState(false);
+  // Pin Form State — the PIN itself lives server-side (mail/pin-guard.php on
+  // darelsalto.com); changing it requires the same admin token used for Reservas.
+  const [newPin, setNewPin] = useState('');
+  const [adminToken, setAdminTokenInput] = useState(getAdminToken);
+  const [pinStatus, setPinStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [pinError, setPinError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -99,12 +101,37 @@ export const HubConfigModal: React.FC<HubConfigModalProps> = ({
     onClose();
   };
 
-  const handleSavePin = (e: React.FormEvent) => {
+  const handleSavePin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPin.length === 4) {
-      onSaveConfig({ ...config, pin: newPin });
-      setPinSaved(true);
-      setTimeout(() => setPinSaved(false), 2000);
+    if (newPin.length !== 6 || adminToken.trim() === '') return;
+
+    setAdminToken(adminToken.trim());
+    setPinStatus('saving');
+    setPinError(null);
+
+    try {
+      const res = await fetch(PIN_GUARD_URL, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken.trim() },
+        body: JSON.stringify({ pin: newPin }),
+      });
+      let body: { success?: boolean; message?: string } = {};
+      try {
+        body = await res.json();
+      } catch {
+        // Non-JSON response — treated as a generic failure below.
+      }
+
+      if (!res.ok || body.success !== true) {
+        throw new Error(body.message || `Error ${res.status}`);
+      }
+
+      setPinStatus('success');
+      setNewPin('');
+      setTimeout(() => setPinStatus('idle'), 2500);
+    } catch (err: any) {
+      setPinStatus('error');
+      setPinError(err.message || 'No se pudo actualizar el PIN.');
     }
   };
 
@@ -116,7 +143,7 @@ export const HubConfigModal: React.FC<HubConfigModalProps> = ({
         <div className="flex items-center justify-between p-5 border-b border-[#171512]/10 bg-white">
           <div className="flex items-center gap-2">
             <Settings className="w-5 h-5 text-[#B72A32]" />
-            <h2 className="font-label text-base uppercase tracking-wider font-bold text-[#171512]">
+            <h2 className="font-poster text-2xl sm:text-3xl leading-none text-[#171512]">
               Configuración y Ajustes
             </h2>
             <Sparkle color="gold" size={14} />
@@ -317,33 +344,60 @@ export const HubConfigModal: React.FC<HubConfigModalProps> = ({
           {/* TAB 2: PIN CODE EDIT */}
           {activeTab === 'pin' && (
             <form onSubmit={handleSavePin} className="space-y-4 font-body">
+              <p className="text-xs text-[#171512]/60 leading-relaxed">
+                El PIN se valida en el servidor de darelsalto.com, por eso necesitás el
+                token de administrador (el mismo de mail/.env, compartido con Reservas)
+                para poder cambiarlo.
+              </p>
+
               <div>
                 <label className="block font-label text-xs uppercase tracking-wider text-[#171512] font-bold mb-1">
-                  Nuevo PIN de 4 dígitos
+                  Token de administrador
                 </label>
                 <input
                   type="password"
-                  maxLength={4}
+                  required
+                  value={adminToken}
+                  onChange={(e) => setAdminTokenInput(e.target.value)}
+                  placeholder="Pegá el valor de ADMIN_TOKEN de mail/.env"
+                  className="w-full p-3 rounded-xl bg-[#F7EFE6] border border-[#171512]/20 text-xs font-mono text-[#171512] focus:outline-none focus:border-[#B72A32]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-label text-xs uppercase tracking-wider text-[#171512] font-bold mb-1">
+                  Nuevo PIN de 6 dígitos
+                </label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
                   required
                   value={newPin}
-                  onChange={(e) => setNewPin(e.target.value)}
-                  placeholder="1234"
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="••••••"
                   className="w-full max-w-xs p-3 rounded-xl bg-[#F7EFE6] border border-[#171512]/20 text-base font-mono text-center tracking-[0.5em] text-[#171512] focus:outline-none focus:border-[#B72A32]"
                 />
               </div>
 
-              {pinSaved && (
+              {pinStatus === 'success' && (
                 <p className="text-xs font-label text-green-700 font-semibold flex items-center gap-1">
                   <Check className="w-4 h-4" /> ¡PIN de acceso actualizado con éxito!
+                </p>
+              )}
+              {pinStatus === 'error' && (
+                <p className="text-xs font-label text-[#B72A32] font-semibold flex items-center gap-1">
+                  <AlertTriangle className="w-4 h-4" /> {pinError}
                 </p>
               )}
 
               <button
                 type="submit"
-                disabled={newPin.length !== 4}
-                className="py-2 px-5 rounded-xl bg-[#B72A32] text-[#F7EFE6] font-label text-xs uppercase tracking-wider font-semibold cursor-pointer shadow-sm disabled:opacity-50"
+                disabled={newPin.length !== 6 || adminToken.trim() === '' || pinStatus === 'saving'}
+                className="py-2 px-5 rounded-xl bg-[#B72A32] text-[#F7EFE6] font-label text-xs uppercase tracking-wider font-semibold cursor-pointer shadow-sm disabled:opacity-50 inline-flex items-center gap-1.5"
               >
-                Actualizar PIN
+                {pinStatus === 'saving' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Actualizar PIN</span>
               </button>
             </form>
           )}

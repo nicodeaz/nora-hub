@@ -80,7 +80,7 @@ export const TestimonialsModal: React.FC<TestimonialsModalProps> = ({
         <div className="flex items-center justify-between p-5 border-b border-[#171512]/10 bg-white">
           <div className="flex items-center gap-2">
             <Heart className="w-5 h-5 text-[#B72A32] fill-[#B72A32]" />
-            <h2 className="font-label text-base uppercase tracking-wider font-bold text-[#171512]">
+            <h2 className="font-poster text-2xl sm:text-3xl leading-none text-[#171512]">
               Testimonios & Experiencias
             </h2>
             <Sparkle color="gold" size={14} />

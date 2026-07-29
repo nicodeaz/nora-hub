@@ -1,9 +1,11 @@
 import React from 'react';
-import { LayoutGrid, BookOpen, Newspaper, Heart, Settings, Plus } from 'lucide-react';
+import { LayoutGrid, BookOpen, Newspaper, Heart, Ticket, Settings, Plus } from 'lucide-react';
+
+type MobileTab = 'home' | 'notes' | 'press' | 'testimonials' | 'reservations' | 'settings';
 
 interface MobileNavProps {
-  activeTab: 'home' | 'notes' | 'press' | 'testimonials' | 'settings';
-  onSelectTab: (tab: 'home' | 'notes' | 'press' | 'testimonials' | 'settings') => void;
+  activeTab: MobileTab;
+  onSelectTab: (tab: MobileTab) => void;
   onOpenAddCard: () => void;
   notesCount?: number;
 }
@@ -59,6 +61,11 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         <button onClick={() => onSelectTab('press')} className={`${TAB_BUTTON} ${tabColor('press')}`}>
           <Newspaper className="w-5 h-5" />
           <span className="font-label text-[9px] uppercase tracking-wider font-semibold">Prensa</span>
+        </button>
+
+        <button onClick={() => onSelectTab('reservations')} className={`${TAB_BUTTON} ${tabColor('reservations')}`}>
+          <Ticket className="w-5 h-5" />
+          <span className="font-label text-[9px] uppercase tracking-wider font-semibold">Reservas</span>
         </button>
 
         <button onClick={() => onSelectTab('settings')} className={`${TAB_BUTTON} ${tabColor('settings')}`}>

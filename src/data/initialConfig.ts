@@ -26,6 +26,18 @@ export const INITIAL_CARDS: HubCardItem[] = [
     badgeText: 'Archivos'
   },
   {
+    id: 'reservas-taller',
+    title: 'Reservas · Dar el Salto',
+    description: 'Lista de inscriptos al taller, estado de pago y datos de contacto.',
+    icon: 'Ticket',
+    url: '#reservas',
+    category: 'gestion',
+    accentColor: 'red',
+    isPinned: true,
+    actionType: 'reservations',
+    badgeText: 'Inscriptos'
+  },
+  {
     id: 'testimonios',
     title: 'Testimonios & Reseñas',
     description: 'Formulario y muro interactivo de alumnos, colegas y directores.',
@@ -107,7 +119,6 @@ export const INITIAL_CARDS: HubCardItem[] = [
 ];
 
 export const INITIAL_CONFIG: AppConfig = {
-  pin: '1234',
   cards: INITIAL_CARDS,
   siteUrl: 'https://norafilmus.com',
   driveUrl: 'https://drive.google.com',

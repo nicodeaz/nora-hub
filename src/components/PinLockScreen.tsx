@@ -1,43 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NoraHubWordmark } from './NoraHubWordmark';
 import { WatercolorBackground } from './WatercolorBackground';
-import { Delete, Heart, ShieldAlert } from 'lucide-react';
+import { Delete, Heart, ShieldAlert, WifiOff } from 'lucide-react';
+import { PIN_GUARD_URL, getDeviceId } from '../lib/backendConfig';
 
 interface PinLockScreenProps {
-  correctPin: string;
   onSuccess: () => void;
   onOpenPublicTestimonials?: () => void;
 }
 
-const MAX_ATTEMPTS = 4;
-const LOCKOUT_MS = 60_000; // 1 minute cooldown after 4 failed attempts
-const ATTEMPTS_KEY = 'nora_hub_pin_attempts';
-const LOCKED_UNTIL_KEY = 'nora_hub_pin_locked_until';
+const PIN_LENGTH = 6;
 
 const formatCountdown = (ms: number): string => {
-  const totalSeconds = Math.ceil(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+  }
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
 const KEYPAD_BUTTON =
-  'flex items-center justify-center w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] rounded-full bg-[#171512]/[0.05] hover:bg-[#171512]/10 active:scale-90 border border-[#171512]/10 text-[#171512] font-label font-medium text-2xl sm:text-3xl tracking-normal normal-case transition-[background-color,transform] duration-150 cursor-pointer touch-manipulation';
+  'flex items-center justify-center w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] rounded-full bg-[#171512]/[0.05] hover:bg-[#171512]/10 active:scale-90 border border-[#171512]/10 text-[#171512] font-label font-medium text-2xl sm:text-3xl tracking-normal normal-case transition-[background-color,transform] duration-150 cursor-pointer touch-manipulation disabled:opacity-40 disabled:pointer-events-none';
 
 export const PinLockScreen: React.FC<PinLockScreenProps> = ({
-  correctPin,
   onSuccess,
   onOpenPublicTestimonials,
 }) => {
   const [pin, setPin] = useState<string>('');
   const [error, setError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [lockedUntil, setLockedUntil] = useState<number>(() => {
-    const saved = Number(localStorage.getItem(LOCKED_UNTIL_KEY) || 0);
-    return saved > Date.now() ? saved : 0;
-  });
+  const [offline, setOffline] = useState<boolean>(false);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [lockedUntil, setLockedUntil] = useState<number>(0);
   const [now, setNow] = useState<Date>(new Date());
-  const attemptsRef = useRef<number>(Number(localStorage.getItem(ATTEMPTS_KEY) || 0));
+  const requestSeq = useRef<number>(0);
 
   const isLocked = lockedUntil > now.getTime();
 
@@ -47,62 +46,89 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Clear lock state once the cooldown expires
+  // Clear local lock display once the cooldown expires; the next attempt
+  // re-validates against the server, which is the real authority.
   useEffect(() => {
     if (lockedUntil && lockedUntil <= now.getTime()) {
       setLockedUntil(0);
-      localStorage.removeItem(LOCKED_UNTIL_KEY);
     }
   }, [lockedUntil, now]);
 
+  const verifyPin = async (enteredPin: string) => {
+    const seq = ++requestSeq.current;
+    setIsVerifying(true);
+    setOffline(false);
+
+    let response: Response;
+    try {
+      response = await fetch(PIN_GUARD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: enteredPin, deviceId: getDeviceId() }),
+      });
+    } catch {
+      if (seq !== requestSeq.current) return;
+      setError(true);
+      setOffline(true);
+      setErrorMessage('Sin conexión. Necesitás internet para desbloquear el Hub.');
+      setIsVerifying(false);
+      setTimeout(() => setPin(''), 500);
+      return;
+    }
+
+    if (seq !== requestSeq.current) return;
+
+    let body: { success?: boolean; message?: string; attemptsRemaining?: number; lockedUntil?: string } = {};
+    try {
+      body = await response.json();
+    } catch {
+      // Non-JSON response — treated as a generic failure below.
+    }
+
+    if (response.status === 423) {
+      const until = body.lockedUntil ? new Date(body.lockedUntil).getTime() : Date.now() + 60_000;
+      setLockedUntil(until);
+      setError(true);
+      setErrorMessage(body.message || 'Demasiados intentos incorrectos. Portal bloqueado temporalmente.');
+      setIsVerifying(false);
+      setPin('');
+      return;
+    }
+
+    if (response.ok && body.success === true) {
+      setIsVerifying(false);
+      onSuccess();
+      return;
+    }
+
+    setError(true);
+    const remaining = typeof body.attemptsRemaining === 'number' ? body.attemptsRemaining : null;
+    setErrorMessage(
+      remaining !== null
+        ? `PIN incorrecto. Te ${remaining === 1 ? 'queda' : 'quedan'} ${remaining} ${remaining === 1 ? 'intento' : 'intentos'}.`
+        : body.message || 'PIN incorrecto.'
+    );
+    setIsVerifying(false);
+    setTimeout(() => setPin(''), 500);
+  };
+
   const handleKeyPress = (num: string) => {
-    if (isLocked) return;
-    if (pin.length < 4) {
+    if (isLocked || isVerifying) return;
+    if (pin.length < PIN_LENGTH) {
       const nextPin = pin + num;
       setPin(nextPin);
       setError(false);
 
-      // Auto submit on 4 digits, like a native lock screen
-      if (nextPin.length === 4) {
+      if (nextPin.length === PIN_LENGTH) {
         verifyPin(nextPin);
       }
     }
   };
 
   const handleDelete = () => {
-    if (isLocked) return;
+    if (isLocked || isVerifying) return;
     setPin((prev) => prev.slice(0, -1));
     setError(false);
-  };
-
-  const verifyPin = (enteredPin: string) => {
-    if (enteredPin === correctPin) {
-      attemptsRef.current = 0;
-      localStorage.removeItem(ATTEMPTS_KEY);
-      localStorage.removeItem(LOCKED_UNTIL_KEY);
-      onSuccess();
-      return;
-    }
-
-    const nextAttempts = attemptsRef.current + 1;
-    attemptsRef.current = nextAttempts;
-    localStorage.setItem(ATTEMPTS_KEY, String(nextAttempts));
-
-    setError(true);
-
-    if (nextAttempts >= MAX_ATTEMPTS) {
-      const until = Date.now() + LOCKOUT_MS;
-      attemptsRef.current = 0;
-      localStorage.removeItem(ATTEMPTS_KEY);
-      localStorage.setItem(LOCKED_UNTIL_KEY, String(until));
-      setLockedUntil(until);
-      setErrorMessage('Demasiados intentos incorrectos. Portal bloqueado temporalmente.');
-    } else {
-      const remaining = MAX_ATTEMPTS - nextAttempts;
-      setErrorMessage(`PIN incorrecto. Te ${remaining === 1 ? 'queda' : 'quedan'} ${remaining} ${remaining === 1 ? 'intento' : 'intentos'}.`);
-    }
-
-    setTimeout(() => setPin(''), 500);
   };
 
   // Listen to physical keyboard events
@@ -117,7 +143,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pin, correctPin, isLocked]);
+  }, [pin, isLocked, isVerifying]);
 
   const timeStr = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
   const dateStr = now.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -163,13 +189,13 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <div className={`flex items-center gap-3.5 ${error ? 'animate-shake' : ''}`}>
-                {[0, 1, 2, 3].map((index) => {
+              <div className={`flex items-center gap-2.5 sm:gap-3 ${error ? 'animate-shake' : ''}`}>
+                {Array.from({ length: PIN_LENGTH }, (_, index) => {
                   const isFilled = pin.length > index;
                   return (
                     <div
                       key={index}
-                      className={`w-3.5 h-3.5 rounded-full transition-all duration-150 border-2 ${
+                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full transition-all duration-150 border-2 ${
                         isFilled
                           ? `${error ? 'bg-[#B72A32] border-[#B72A32]' : 'bg-[#171512] border-[#171512]'} scale-110`
                           : 'bg-transparent border-[#171512]/30'
@@ -178,8 +204,9 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
                   );
                 })}
               </div>
-              <p className={`font-label text-[11px] uppercase tracking-wider font-semibold h-4 ${error ? 'text-[#B72A32]' : 'text-[#171512]/50'}`}>
-                {error ? errorMessage : 'Ingresa tu PIN'}
+              <p className={`font-label text-[11px] uppercase tracking-wider font-semibold h-4 flex items-center gap-1.5 ${error ? 'text-[#B72A32]' : 'text-[#171512]/50'}`}>
+                {offline && <WifiOff className="w-3 h-3" />}
+                {isVerifying ? 'Verificando...' : error ? errorMessage : 'Ingresa tu PIN'}
               </p>
             </div>
           )}
@@ -192,7 +219,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
               key={num}
               type="button"
               onClick={() => handleKeyPress(num)}
-              disabled={isLocked}
+              disabled={isLocked || isVerifying}
               className={KEYPAD_BUTTON}
             >
               {num}
@@ -202,7 +229,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
           <button
             type="button"
             onClick={() => handleKeyPress('0')}
-            disabled={isLocked}
+            disabled={isLocked || isVerifying}
             className={KEYPAD_BUTTON}
           >
             0
@@ -210,8 +237,8 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
           <button
             type="button"
             onClick={handleDelete}
-            disabled={isLocked}
-            className="flex items-center justify-center w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] text-[#171512]/60 hover:text-[#B72A32] cursor-pointer active:scale-90 transition-[color,transform] touch-manipulation"
+            disabled={isLocked || isVerifying}
+            className="flex items-center justify-center w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] text-[#171512]/60 hover:text-[#B72A32] cursor-pointer active:scale-90 transition-[color,transform] touch-manipulation disabled:opacity-40 disabled:pointer-events-none"
             title="Borrar dígito"
           >
             <Delete className="w-6 h-6" />
