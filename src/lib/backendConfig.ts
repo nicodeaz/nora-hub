@@ -1,9 +1,10 @@
-// Shared connection details for the darelsalto.com PHP backend (mail/) that
-// backs both the server-side PIN lockout and the workshop reservations list.
-// Fixed endpoints (not user-editable) so there's one less thing to misconfigure;
-// only the admin token is a secret Nora pastes in once from mail/.env.
+// Shared connection details for the workshops.norafilmus.com PHP backend
+// (mail/) that backs both the server-side PIN lockout and the workshop
+// reservations list. Fixed endpoints (not user-editable) so there's one less
+// thing to misconfigure; only the admin token is a secret Nora pastes in once
+// from mail/.env.
 
-export const BACKEND_BASE_URL = 'https://darelsalto.com/mail';
+export const BACKEND_BASE_URL = 'https://workshops.norafilmus.com/mail';
 export const PIN_GUARD_URL = `${BACKEND_BASE_URL}/pin-guard.php`;
 export const RESERVATIONS_URL = `${BACKEND_BASE_URL}/reservations.php`;
 

@@ -38,13 +38,17 @@
   Header set X-Content-Type-Options "nosniff"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
   Header set X-Frame-Options "SAMEORIGIN"
-</IfModule>
 
-# The hashed JS/CSS rule above only applies to the top-level dist/ output;
-# Vite's actual hashed bundles live under assets/ - this restates the same
-# immutable policy scoped there so it isn't shadowed by the no-cache rule.
-<IfModule mod_headers.c>
-  <LocationMatch "^/hub/assets/">
-    Header set Cache-Control "public, max-age=31536000, immutable"
-  </LocationMatch>
+  # norafilmus.com's site-wide CSP locks connect-src to 'self', which blocks
+  # this SPA's fetch() calls to the workshops.norafilmus.com PIN/reservations
+  # backend. The site-wide policy is being sent as a *second*, separate
+  # Content-Security-Policy header alongside this one (browsers AND multiple
+  # CSP headers together, so the stricter one still wins) — explicitly
+  # unsetting before setting, both with "always", to force this one to be the
+  # only one on responses under /hub/.
+  # connect-src also needs the font hosts: the service worker's fetch handler
+  # intercepts the <link> stylesheet request and re-issues it via fetch(),
+  # which CSP enforces against connect-src rather than style-src/font-src.
+  Header always unset Content-Security-Policy
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://workshops.norafilmus.com https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'none';"
 </IfModule>

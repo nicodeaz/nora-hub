@@ -71,7 +71,7 @@ export const HubConfigModal: React.FC<HubConfigModalProps> = ({
   }, [editingCard, isOpen]);
 
   // Pin Form State — the PIN itself lives server-side (mail/pin-guard.php on
-  // darelsalto.com); changing it requires the same admin token used for Reservas.
+  // workshops.norafilmus.com); changing it requires the same admin token used for Reservas.
   const [newPin, setNewPin] = useState('');
   const [adminToken, setAdminTokenInput] = useState(getAdminToken);
   const [pinStatus, setPinStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -345,9 +345,9 @@ export const HubConfigModal: React.FC<HubConfigModalProps> = ({
           {activeTab === 'pin' && (
             <form onSubmit={handleSavePin} className="space-y-4 font-body">
               <p className="text-xs text-[#171512]/60 leading-relaxed">
-                El PIN se valida en el servidor de darelsalto.com, por eso necesitás el
-                token de administrador (el mismo de mail/.env, compartido con Reservas)
-                para poder cambiarlo.
+                El PIN se valida en el servidor de workshops.norafilmus.com, por eso
+                necesitás el token de administrador (el mismo de mail/.env, compartido
+                con Reservas) para poder cambiarlo.
               </p>
 
               <div>
