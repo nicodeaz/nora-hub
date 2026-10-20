@@ -35,6 +35,10 @@ There is no test suite. Validate changes with `npm run lint` and by running the 
 
 **Card actions**: `HubCardItem.actionType` determines what a dashboard card does when clicked — `'link'` opens `url` in a new tab, while `'press-kit'`, `'testimonials'`, and `'notes'` open the corresponding modal instead of navigating. Legacy cards without `actionType` fall back to matching on hash-style `url` values (`#prensa`, `#testimonios`, `#proyectos`).
 
+**Launch kit** (`actionType: 'launch-kit'`, `LaunchKitModal` + `src/data/launchKit.ts`): the Instagram pieces that announce norafilmus.com (carousel + story, ES/EN, served from `public/kit-lanzamiento/` at exact Instagram size — generated in the `norafilmus` repo under `flyers/lanzamiento-web/`), their captions, and a plain-language posting guide for Nora. On touch devices "Guardar" uses the Web Share API with preloaded `File`s (iPhone → "Guardar imágenes" to Photos); elsewhere it falls back to `<a download>`.
+
+**New default cards reach existing devices only via `CARDS_ADDED_LATER`** in `App.tsx`: a saved config is loaded verbatim from `localStorage`, so a card added to `INITIAL_CARDS` is otherwise invisible to anyone who already used the hub. Ids listed there are merged in once and remembered in `nora_hub_offered_cards`, so a card the user deletes stays deleted.
+
 **Modals** (`QuickNotesModal`, `PressKitModal`, `TestimonialsModal`, `HubConfigModal`, `PWAInstallPrompt`) are all mounted unconditionally at the bottom of `App.tsx` and toggle visibility via `isOpen` props — there's no modal manager. `HubConfigModal` doubles as the card create/edit form and the PIN-change form (tabbed).
 
 **Mobile nav**: `MobileNav` is a sticky bottom bar (mobile-only) with its own `mobileTab` state in `App.tsx`, mapped to the same open/close handlers as the desktop `Header` buttons. Keep both entry points wired to the same handler when adding a new modal/section.

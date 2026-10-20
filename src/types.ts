@@ -10,7 +10,7 @@ export interface HubCardItem {
   accentColor: 'red' | 'pink' | 'teal' | 'gold' | 'ink';
   isPinned?: boolean;
   isCustom?: boolean;
-  actionType?: 'link' | 'press-kit' | 'testimonials' | 'notes' | 'reservations';
+  actionType?: 'link' | 'press-kit' | 'testimonials' | 'notes' | 'reservations' | 'launch-kit';
   badgeText?: string;
 }
 

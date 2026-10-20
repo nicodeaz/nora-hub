@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppConfig, HubCardItem, QuickNoteItem, TestimonialItem } from './types';
-import { INITIAL_CONFIG, INITIAL_NOTES, INITIAL_TESTIMONIALS } from './data/initialConfig';
+import { INITIAL_CARDS, INITIAL_CONFIG, INITIAL_NOTES, INITIAL_TESTIMONIALS } from './data/initialConfig';
 import { PinLockScreen } from './components/PinLockScreen';
 import { Header } from './components/Header';
 import { DashboardGrid } from './components/DashboardGrid';
@@ -9,6 +9,7 @@ import { QuickNotesModal } from './components/QuickNotesModal';
 import { PressKitModal } from './components/PressKitModal';
 import { TestimonialsModal } from './components/TestimonialsModal';
 import { ReservationsModal } from './components/ReservationsModal';
+import { LaunchKitModal } from './components/LaunchKitModal';
 import { HubConfigModal } from './components/HubConfigModal';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
@@ -17,6 +18,29 @@ import { PublicTestimonialView } from './components/PublicTestimonialView';
 import { LoadingScreen } from './components/LoadingScreen';
 
 const MIN_LOADING_MS = 150;
+
+// Cards added to INITIAL_CARDS after the hub was already in use. A saved
+// config never picks up new defaults on its own (it's loaded verbatim from
+// localStorage), so each of these is offered once: added if missing, then
+// remembered in nora_hub_offered_cards so deleting it later sticks.
+const CARDS_ADDED_LATER = ['kit-lanzamiento-web'];
+const OFFERED_CARDS_KEY = 'nora_hub_offered_cards';
+
+function readOfferedCards(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(OFFERED_CARDS_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function withLaterCards(saved: AppConfig): AppConfig {
+  const offered = readOfferedCards();
+  const toAdd = INITIAL_CARDS.filter(
+    (c) => CARDS_ADDED_LATER.includes(c.id) && !offered.includes(c.id) && !saved.cards.some((s) => s.id === c.id)
+  );
+  return toAdd.length ? { ...saved, cards: [...toAdd, ...saved.cards] } : saved;
+}
 const LOADING_FADE_MS = 250;
 
 export default function App() {
@@ -53,7 +77,7 @@ export default function App() {
     const saved = localStorage.getItem('nora_hub_config');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        return withLaterCards(JSON.parse(saved));
       } catch (e) {
         return INITIAL_CONFIG;
       }
@@ -90,6 +114,7 @@ export default function App() {
   const [isPressKitOpen, setIsPressKitOpen] = useState<boolean>(false);
   const [isTestimonialsOpen, setIsTestimonialsOpen] = useState<boolean>(false);
   const [isReservationsOpen, setIsReservationsOpen] = useState<boolean>(false);
+  const [isLaunchKitOpen, setIsLaunchKitOpen] = useState<boolean>(false);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
   const [isPwaPromptOpen, setIsPwaPromptOpen] = useState<boolean>(false);
   const [editingCardItem, setEditingCardItem] = useState<HubCardItem | null>(null);
@@ -107,6 +132,7 @@ export default function App() {
       setIsPressKitOpen(false);
       setIsTestimonialsOpen(false);
       setIsReservationsOpen(false);
+      setIsLaunchKitOpen(false);
       setIsConfigOpen(false);
     } else if (tab === 'notes') {
       setIsNotesOpen(true);
@@ -124,13 +150,20 @@ export default function App() {
 
   // Lock body scroll while any modal is open, so dragging past a modal's own
   // scroll boundary on mobile can't chain into scrolling the page behind it.
-  const isAnyModalOpen = isNotesOpen || isPressKitOpen || isTestimonialsOpen || isReservationsOpen || isConfigOpen || isPwaPromptOpen;
+  const isAnyModalOpen = isNotesOpen || isPressKitOpen || isTestimonialsOpen || isReservationsOpen || isLaunchKitOpen || isConfigOpen || isPwaPromptOpen;
   useEffect(() => {
     document.body.style.overflow = isAnyModalOpen ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
   }, [isAnyModalOpen]);
+
+  // Mark the later-added cards as offered (see CARDS_ADDED_LATER) once the
+  // initial config — with them already merged in — has been loaded.
+  useEffect(() => {
+    const offered = readOfferedCards();
+    localStorage.setItem(OFFERED_CARDS_KEY, JSON.stringify(Array.from(new Set([...offered, ...CARDS_ADDED_LATER]))));
+  }, []);
 
   // Sync to LocalStorage
   useEffect(() => {
@@ -204,12 +237,15 @@ export default function App() {
       setIsNotesOpen(true);
     } else if (card.actionType === 'reservations') {
       setIsReservationsOpen(true);
+    } else if (card.actionType === 'launch-kit') {
+      setIsLaunchKitOpen(true);
     } else {
       if (card.url.startsWith('#')) {
         if (card.url === '#prensa') setIsPressKitOpen(true);
         if (card.url === '#testimonios') setIsTestimonialsOpen(true);
         if (card.url === '#proyectos') setIsNotesOpen(true);
         if (card.url === '#reservas') setIsReservationsOpen(true);
+        if (card.url === '#kit-lanzamiento') setIsLaunchKitOpen(true);
       } else {
         window.open(card.url, '_blank', 'noopener,noreferrer');
       }
@@ -403,6 +439,12 @@ export default function App() {
       <ReservationsModal
         isOpen={isReservationsOpen}
         onClose={() => setIsReservationsOpen(false)}
+      />
+
+      {/* 3c. Launch Kit Modal (Instagram pieces for norafilmus.com) */}
+      <LaunchKitModal
+        isOpen={isLaunchKitOpen}
+        onClose={() => setIsLaunchKitOpen(false)}
       />
 
       {/* 4. Configuration & JSON Editor Modal */}

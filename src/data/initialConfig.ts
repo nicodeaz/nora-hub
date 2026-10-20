@@ -14,6 +14,18 @@ export const INITIAL_CARDS: HubCardItem[] = [
     badgeText: 'Oficial'
   },
   {
+    id: 'kit-lanzamiento-web',
+    title: 'Lanzamiento Web · Instagram',
+    description: 'Carrusel e historia para presentar norafilmus.com, con los textos y el paso a paso para publicarlos.',
+    icon: 'Megaphone',
+    url: '#kit-lanzamiento',
+    category: 'prensa',
+    accentColor: 'red',
+    isPinned: true,
+    actionType: 'launch-kit',
+    badgeText: 'Nuevo'
+  },
+  {
     id: 'google-drive',
     title: 'Google Drive',
     description: 'Carpeta principal con contratos, imágenes, dossiers y documentos de producción.',
